@@ -1,0 +1,102 @@
+---
+title: "HW_EmpiricalDistribution"
+author: "Tingrui Huang"
+date: "March 4, 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Problem 1
+```{R message=FALSE}
+library(readr)
+library(tidyverse)
+library(fitdistrplus)
+# Question a
+maybe_uniform <- read_table2("../ma677/data/maybe_uniform.txt", col_names = FALSE)
+maybe_uniform <- unlist(maybe_uniform)
+plotdist(maybe_uniform)
+ks.test(maybe_uniform,punif(25,0,1))
+# P-value is 0.076 indicates we can not reject the H0, therefore, we might say the empirical distribution is the same as uniform distribution.
+
+# Question b
+testmodel <- function(x){
+  return(2/3*I(0<x & x<=1/2)+1/2*I(1/2<x & x<1))
+}
+ks.test(testmodel(seq(-2,2,by=0.01)),"punif")
+# The p-value is smaller than 0.05 indicates we can reject the null hypothesis, hence we can say the two distributions are not the same. D statistics value 0.75 indicates the model is not better than uniform distribution.
+```
+
+# Problem 2
+```{R message=FALSE}
+maybe_normal <- read_table2("../ma677/data/maybe_normal.txt", col_names = FALSE)
+maybe_normal <- unlist(maybe_normal)
+ks.test(maybe_normal,pnorm(50,26,4))
+# P-value is 0.039 indicates we reject the H0, therefore, we might say the empirical distribution is different from normal distribution with mean=26 and sd=4.
+qqnorm(maybe_normal)
+hist(maybe_normal)
+# From the qnorm plot and histogram we can tell the empirical distribution is close to normal distribution.
+```
+
+# Problem 3
+```{R message=FALSE}
+maybe_same_1 <- read_table2("../ma677/data/maybe_same_1.txt", col_names = FALSE)
+maybe_same_2 <- read_table2("../ma677/data/maybe_same_2.txt", col_names = FALSE)
+maybe_same_1 <- unlist(maybe_same_1)
+maybe_same_2 <- unlist(maybe_same_2)
+plotdist(maybe_same_1)
+plotdist(maybe_same_2)
+descdist(maybe_same_1, boot = 1000)
+descdist(maybe_same_2, boot = 1000)
+same1 <- fitdist(maybe_same_1,distr = "norm")
+same2 <- fitdist(maybe_same_2,distr = "norm")
+par(mfrow=c(1,2))
+plot(same1)
+plot(same2)
+ks.test(maybe_same_1,maybe_same_2)
+# It seems both datasets are not from different distribution. The p-value 0.33 indicates we can not reject the null hypothesis, hence the two distributions are not different.
+maybesame1.2 <- maybe_same_1+2
+descdist(maybesame1.2, boot = 1000)
+same1.2 <- fitdist(maybesame1.2,distr = "norm")
+plot(same1.2)
+ks.test(maybesame1.2,maybe_same_2)
+# The p-value is very small and it indicates we can reject our null hypothesis, such that we can say the two distributions are not the same.
+```
+
+# Problem 4
+```{r message=FALSE}
+normdata <- readRDS("../ma677/data/norm_sample.Rdata")
+plot(ecdf(normdata))
+plotdist(normdata)
+mean(normdata);var(normdata)
+ks.test(normdata,"pnorm")
+# P-value is 0.368 indicates the empirical distribution is the same normal distribution
+```
+
+# Problem 5
+```{r message=FALSE}
+faithful <- read.delim("../ma677/data/faithful.dat",header = TRUE,skip = 20,sep = "")
+fijiquakes <- read.delim("../ma677/data/fijiquakes.dat",header = TRUE, sep = "")
+# Plot ECDF
+plot(ecdf(faithful$waiting))
+plot(ecdf(fijiquakes$mag))
+#lower and upper bands:
+n <- sum(!is.na(faithful$waiting))
+L<-1:n
+U<-1:n
+  epsilon_i = sqrt(log(2/0.05)/(2*n))
+
+  L=pmax(1:n/n-epsilon_i, 0)
+  U=pmin(1:n/n+epsilon_i, 1)
+  plot(ecdf(faithful$waiting))
+  lines(faithful$waiting, U, col="blue")
+  lines(faithful$waiting, L, col="blue")
+
+# Calculate F(4.9)-F(4.3)
+  ecdf(fijiquakes$mag)(4.9)-ecdf(fijiquakes$mag)(4.3)
+# Mean and median wating time
+  mean(faithful$waiting)
+  median(faithful$waiting)
+```
